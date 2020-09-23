@@ -1,0 +1,328 @@
+#! /usr/bin/env python
+
+import pygame
+from pygame.locals import *
+
+from data import *
+import math
+
+TOP_SIDE    = 0
+BOTTOM_SIDE = 2
+LEFT_SIDE   = 3
+RIGHT_SIDE  = 1
+
+def speed_to_side(dx,dy):
+    if abs(dx) > abs(dy):
+        dy = 0
+    else:
+        dx = 0
+    if dy < 0:
+        return 0
+    elif dx > 0:
+        return 1
+    elif dy > 0:
+        return 2
+    elif dx < 0:
+        return 3
+    else:
+        return 0, 0
+    
+class Collidable(pygame.sprite.Sprite):
+
+    def __init__(self, *groups):
+        pygame.sprite.Sprite.__init__(self, groups)
+        self.collision_groups = []
+        self.xoffset = 0
+        self.yoffset = 0
+
+    def collide(self, group):
+        if group not in self.collision_groups:
+            self.collision_groups.append(group)
+
+    def move(self, dx, dy, collide=True):
+        if collide:
+            if dx!=0:
+                dx, dummy = self.__move(dx,0)
+            if dy!=0:
+                dummy, dy = self.__move(0,dy)
+        else:
+            self.rect.move_ip(dx, dy)
+        return dx, dy
+
+    def clamp_off(self, sprite, side):
+        if side == TOP_SIDE:
+            self.rect.top = sprite.rect.bottom
+        if side == RIGHT_SIDE:
+            self.rect.right = sprite.rect.left
+        if side == BOTTOM_SIDE:
+            self.rect.bottom = sprite.rect.top
+        if side == LEFT_SIDE:
+            self.rect.left = sprite.rect.right
+
+    def __move(self,dx,dy):
+        oldr = self.rect
+        self.rect.move_ip(dx, dy)
+        side = speed_to_side(dx, dy)
+
+        for group in self.collision_groups:
+            for spr in group:
+                if spr.rect.colliderect(self.rect):
+                    self.on_collision(side, spr, group)
+
+        return self.rect.left-oldr.left,self.rect.top-oldr.top
+
+    def on_collision(self, side, sprite, group):
+        self.clamp_off(sprite, side)
+
+    def draw(self, surf):
+        surf.blit(self.image, (self.rect[0]+self.xoffset, self.rect[1]+self.yoffset))
+
+class Player(Collidable):
+
+    def __init__(self, pos):
+        Collidable.__init__(self, self.groups)
+        self.right_images = [load_image("hero1.png"), load_image("hero2.png"), load_image("hero3.png")]
+        self.left_images = []
+        for i in self.right_images:
+            self.left_images.append(pygame.transform.flip(i, 1, 0))
+        self.image = self.right_images[0]
+        self.rect = self.image.get_rect(topleft = pos)
+        self.jump_speed = 0
+        self.jump_accel = 0.3
+        self.jumping = False
+        self.frame = 0
+        self.facing = 1
+        self.shooting = False
+        self.shoot_timer = 0
+        self.string = Stringer(self.rect.center, self.facing, 0, self)
+        self.string.kill()
+        self.still_timer = 0
+        self.hp = 5
+        self.hit_timer = 0
+        self.jump_sound = load_sound("jump.ogg")
+        self.shoot_sound = load_sound("string.ogg")
+
+    def on_collision(self, side, sprite, group):
+        self.clamp_off(sprite, side)
+        if side == TOP_SIDE:
+            self.jump_speed = 0
+        if side == BOTTOM_SIDE:
+            self.jump_speed = 0
+            self.jumping = False
+            
+    def hit(self):
+        if self.hit_timer <= 0:
+            self.hit_timer = 20
+            self.hp -= 1
+            if self.hp <= 0:
+                self.kill()
+            
+    def jump(self):
+        if not self.jumping and not self.shooting:
+            self.jump_speed = -8
+            self.jumping = True
+            
+    def shoot(self):
+        if not self.shooting and not self.jumping:
+            self.shooting = True
+            self.shoot_timer = 30
+            
+    def stop_attacking(self):
+        self.shooting = False
+        self.shoot_timer = 0
+        self.still_timer = self.string.life
+
+    def update(self):
+        self.frame += 1
+        self.still_timer -= 1
+        self.hit_timer -= 1
+        dx = 0
+        key = pygame.key.get_pressed()
+
+        if key[K_z]:
+            self.jump_accel = 0.3
+        else:
+            self.jump_accel = 0.6
+
+        if self.jump_speed < 8:
+            self.jump_speed += self.jump_accel
+        if self.jump_speed > 3:
+            self.jumping = True
+            
+        if self.shooting:
+            self.shoot_timer -= 1
+            id = self.shoot_timer/5
+            if self.shoot_timer % 5 == 0 and id != 0:
+                self.string = Stringer(self.rect.center, self.facing, id, self)
+            if self.shoot_timer <= 0:
+                self.shooting = False
+        else:
+            if self.still_timer <= 0:
+                if key[K_LEFT]:
+                    dx = -1
+                    self.facing = dx
+                if key[K_RIGHT]:
+                    dx = 1
+                    self.facing = dx
+
+        if self.facing > 0:
+            self.image = self.right_images[0]
+        if self.facing < 0:
+            self.image = self.left_images[0]
+        if dx > 0:
+            self.image = self.right_images[self.frame/4%2]
+        if dx < 0:
+            self.image = self.left_images[self.frame/4%2]
+        if self.facing > 0 and self.jumping:
+            self.image = self.right_images[1]
+        if self.facing < 0 and self.jumping:
+            self.image = self.left_images[1]
+        if self.hit_timer > 0:
+            if not self.frame % 2:
+                if self.facing > 0:
+                    self.image = self.right_images[2]
+                if self.facing < 0:
+                    self.image = self.left_images[2]
+
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.top > 480:
+            self.kill()
+                    
+        self.move(3*dx, self.jump_speed)
+        
+class Platform(Collidable):
+    def __init__(self, pos, tile, l, r):
+        Collidable.__init__(self, self.groups)
+        self.image = load_image("platform-%s.png" % tile)
+        self.rect = self.image.get_rect(topleft = pos)
+        self.on_left = l
+        self.on_right = r
+        
+class MovingPlatform(Collidable):
+    def __init__(self, pos):
+        Collidable.__init__(self, self.groups)
+        self.image = load_image("moving-platform.png")
+        self.rect = self.image.get_rect(topleft = pos)
+        self.oldy = self.rect.centery
+        self.speed = 1
+    def on_collision(self, side, sprite, group):
+        if isinstance(sprite, Player):
+            if side == TOP_SIDE:
+                sprite.rect.bottom = self.rect.top
+                sprite.jump_speed = 1
+            if side == BOTTOM_SIDE:
+                sprite.rect.top = self.rect.bottom
+                if not sprite.jumping:
+                    sprite.kill()
+    def update(self):
+        if self.rect.centery > self.oldy+64:
+            self.speed = -self.speed
+        if self.rect.centery < self.oldy-64:
+            self.speed = -self.speed
+        self.move(0, self.speed)
+    def collide_with_platforms(self, platform):
+        if self.rect.colliderect(platform.rect):
+            self.speed = -self.speed
+            self.move(0, self.speed)
+        
+class Stringer(Collidable):
+    def __init__(self, pos, dir, id, player):
+        Collidable.__init__(self, self.groups)
+        self.image = load_image("string.png")
+        self.rect = self.image.get_rect(center = pos)
+        self.move((28-id*12)*dir, 0)
+        self.move(54*dir, 0)
+        self.player = player
+        self.dir = dir
+        self.id = id
+        if dir < 0:
+            self.image = pygame.transform.flip(self.image, 1, 0)
+        self.life = 5*id
+    def update(self):
+        self.rect.center = self.player.rect.center
+        self.move((28-self.id*12)*self.dir, 0)
+        self.move(54*self.dir, 0)
+        self.life -= 1
+        if not self.life % 5:
+            self.image = pygame.transform.flip(self.image, 0, 0)
+        if self.life <= 0:
+            self.kill()
+
+class Baddie(Collidable):
+    def __init__(self, pos, type="monster"):
+        Collidable.__init__(self, self.groups)
+        self.left_images = [load_image("%s%d.png" % (type, i)) for i in range(1, 3)]
+        self.right_images = []
+        for i in self.left_images:
+            self.right_images.append(pygame.transform.flip(i, 1, 0))
+        self.images = self.right_images
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(topleft = pos)
+        self.frame = 0
+        self.speed = 2
+        self.type = type
+    
+    def update(self):
+        if self.speed > 0:
+            self.images = self.right_images
+        if self.speed < 0:
+            self.images = self.left_images
+        self.frame += 1
+        self.image = self.images[self.frame/8%2]
+        self.move(self.speed, 1)
+    
+    def on_collision(self, side, sprite, group):
+        self.clamp_off(sprite, side)
+        if side == LEFT_SIDE:
+            self.speed = 1
+        if side == RIGHT_SIDE:
+            self.speed = -1
+        if side == BOTTOM_SIDE:
+            if sprite.on_left:
+                bottomleft = Rect(0, 0, 1, 1)
+                bottomleft.topright = self.rect.bottomleft
+                if bottomleft.left < sprite.rect.left:
+                    self.speed = 1
+            if sprite.on_right:
+                bottomright = Rect(0, 0, 1, 1)
+                bottomright.topleft = self.rect.bottomright
+                if bottomright.right > sprite.rect.right:
+                    self.speed = -1
+            
+class BaddieBoom(Collidable):
+    def __init__(self, pos, facing, type):
+        Collidable.__init__(self, self.groups)
+        self.left_images = [load_image("%s2.png" % type), load_image("%s3.png" % type), load_image("exp1.png"), load_image("exp2.png"), load_image("exp3.png")]
+        self.right_images = []
+        for i in self.left_images:
+            self.right_images.append(pygame.transform.flip(i, 1, 0))
+        self.images = self.right_images
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(center = pos)
+        self.facing = facing
+        self.timer = 0
+   
+    def update(self):
+        if self.facing > 0:
+            self.images = self.right_images
+        else:
+            self.images = self.left_images
+        self.timer += 1
+        if self.timer <= 25:
+            self.image = self.images[self.timer/4%2]
+        elif self.timer < 36:
+            self.image = self.images[self.timer/4%3 + 2]
+        else:
+            self.kill()
+            
+class Coin(Collidable):
+    def __init__(self, pos):
+        Collidable.__init__(self, self.groups)
+        self.images = [load_image("coin%s.png" % i) for i in range(1, 5)]
+        self.image = self.images[0]
+        self.rect = self.image.get_rect(topleft = pos)
+        self.frame = 0
+    def update(self):
+        self.frame += 1
+        self.image = self.images[self.frame/6%4]

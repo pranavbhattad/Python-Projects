@@ -1,0 +1,19 @@
+'''Game main module.
+
+Contains the entry point used by the run_game.py script.
+
+Feel free to put all your game code here, or in other modules in this "gamelib"
+package.
+'''
+
+import pygame, os
+from pygame.locals import *
+
+import game
+
+def main():
+    os.environ["SDL_VIDEO_CENTERED"] = "1"
+    pygame.init()
+    pygame.display.set_caption("Odysseus and the Isle of String")
+    screen = pygame.display.set_mode((640, 480))
+    game.Game(screen)

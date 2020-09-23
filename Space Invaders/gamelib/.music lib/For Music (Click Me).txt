@@ -1,0 +1,5 @@
+Hello, You can see in the gamelib/main.py or .../Space Invaders.py that the Music isn't there and Actully I did not like the musicduring the game as it is anormal acrade game. 
+
+So music is not suited (Background) Laser shooting will be there for a little effect..
+
+ThankYou So much :) enjoy my game.....

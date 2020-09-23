@@ -1,0 +1,132 @@
+#! /usr/bin/env python
+
+import sys, os
+import random
+
+import pygame
+from pygame.locals import *
+
+from data import *
+from sprites import *
+from level import *
+
+def RelRect(actor, camera):
+    return Rect(actor.rect.x-camera.rect.x, actor.rect.y-camera.rect.y, actor.rect.w, actor.rect.h)
+
+class Camera(object):
+    def __init__(self, player):
+        self.player = player
+        self.rect = pygame.display.get_surface().get_rect()
+        self.world = Rect(0, 0, 1280, 480)
+        self.rect.center = self.player.rect.center
+    def update(self):
+        if self.player.rect.centerx > self.rect.centerx+64:
+            self.rect.centerx = self.player.rect.centerx-64
+        if self.player.rect.centerx < self.rect.centerx-64:
+            self.rect.centerx = self.player.rect.centerx+64
+        if self.player.rect.centery > self.rect.centery+64:
+            self.rect.centery = self.player.rect.centery-64
+        if self.player.rect.centery < self.rect.centery-64:
+            self.rect.centery = self.player.rect.centery+64
+        self.rect.clamp_ip(self.world)
+    def draw_sprites(self, surf, sprites):
+        for s in sprites:
+            if s.rect.colliderect(self.rect):
+                surf.blit(s.image, RelRect(s, self))
+
+class Game(object):
+
+    def __init__(self, screen):
+
+        self.screen = screen
+        self.sprites = pygame.sprite.OrderedUpdates()
+        self.players = pygame.sprite.OrderedUpdates()
+        self.platforms = pygame.sprite.OrderedUpdates()
+        self.movingplatforms = pygame.sprite.OrderedUpdates()
+        self.string = pygame.sprite.OrderedUpdates()
+        self.baddies = pygame.sprite.OrderedUpdates()
+        self.nomoveplatforms = pygame.sprite.OrderedUpdates()
+        
+        Player.groups = self.sprites, self.players
+        Platform.groups = self.sprites, self.platforms, self.nomoveplatforms
+        MovingPlatform.groups = self.sprites, self.platforms, self.movingplatforms
+        Stringer.groups = self.sprites, self.string
+        Baddie.groups = self.sprites, self.baddies
+        BaddieBoom.groups = self.sprites
+        Coin.groups = self.sprites
+
+        self.player = Player((0, 0))
+        self.clock = pygame.time.Clock()
+        self.bg = load_image("bg.png")
+        self.level = Level(1)
+        self.camera = Camera(self.player)
+        self.font = pygame.font.Font(filepath("font.ttf"), 16)
+        self.heart1 = load_image("heart-full.png")
+        self.heart2 = load_image("heart-empty.png")
+        self.heroimg = load_image("hero1.png")
+
+        self.main_loop()
+        
+    def next_level(self):
+        raise SystemExit, "You win!"
+
+    def main_loop(self):
+
+        while 1:
+
+            self.clock.tick(60)
+            for s in self.sprites:
+                s.update()
+            self.camera.update()
+            self.player.collide(self.platforms)
+            for p in self.movingplatforms:
+                p.collide(self.players)
+                for p2 in self.platforms:
+                    if p != p2:
+                        p.collide_with_platforms(p2)
+            for b in self.baddies:
+                if self.player.rect.colliderect(b.rect):
+                    self.player.hit()
+                b.collide(self.platforms)
+                for s in self.string:
+                    if s.rect.colliderect(b.rect):
+                        b.kill()
+                        BaddieBoom(b.rect.center, b.speed, b.type)
+                        for s in self.string:
+                            s.life = 36
+                        self.player.stop_attacking()
+
+            if self.player.rect.right > 1280:
+                self.next_level()
+
+            for e in pygame.event.get():
+                if e.type == QUIT:
+                    pygame.quit()
+                    return
+                if e.type == KEYDOWN:
+                    if e.key == K_ESCAPE:
+                        pygame.quit()
+                        return
+                    if e.key == K_z:
+                        self.player.jump()
+                    if e.key == K_x:
+                        self.player.shoot()
+                        
+            self.screen.blit(self.bg, ((-self.camera.rect.x/2)%640, 0))
+            self.screen.blit(self.bg, ((-self.camera.rect.x/2)%640 + 640, 0))
+            self.screen.blit(self.bg, ((-self.camera.rect.x/2)%640 - 640, 0))
+            self.camera.draw_sprites(self.screen, self.sprites)
+            for i in range(5):
+                self.screen.blit(self.heart2, (16 + i*34, 16))
+            for i in range(self.player.hp):
+                self.screen.blit(self.heart1, (16 + i*34, 16))
+            self.screen.blit(self.heroimg, (288, 16))
+            ren = self.font.render("0000000000", 1, (255, 255, 255))
+            self.screen.blit(ren, (624-ren.get_width(), 16))
+            ren = self.font.render("x3", 1, (255, 255, 255))
+            self.screen.blit(ren, (288+34, 24))
+            if not self.player.alive():
+                ren = self.font.render("GAME OVER", 1, (255, 255, 255))
+                self.screen.blit(ren, (320-ren.get_width()/2, 240-ren.get_height()/2))
+            pygame.display.flip()
+
