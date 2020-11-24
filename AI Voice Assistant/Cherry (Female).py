@@ -6,7 +6,6 @@ import speech_recognition as sr
 import wikipedia
 import os
 import webbrowser
-import vlc 
 
 #  voice or speech engine
 engine = pyttsx3.init('sapi5')
@@ -235,17 +234,21 @@ if __name__ == "__main__":
 
         # Open MineCraft
         elif 'minecraft' in query:
+            speak("Opening T-Launcher Minecraft")
             tlauncher = "C:\\Users\\PRANAV BHATTAD\\AppData\\Roaming\\.minecraft\\TLauncher.exe"
             os.startfile(tlauncher)
         
         # Calculator
         elif 'calcute' in query:
+            speak("opening calculator")
             os.startfile("C:\WINDOWS\system32\calc.exe")
 
         elif 'calculator' in query:
+            speak("opening calculator")
             os.startfile("C:\WINDOWS\system32\calc.exe")
 
         elif 'calculation' in query:
+            speak("opening calculator")
             os.startfile("C:\WINDOWS\system32\calc.exe")
 
 
