@@ -6,21 +6,27 @@ import speech_recognition as sr
 import wikipedia
 import os
 import webbrowser
+import pywhatkit
+import pyjokes
+
 
 #  voice or speech engine
-engine = pyttsx3.init('sapi5')
+engine = pyttsx3.init()
 voices = engine.getProperty('voices')
 engine.setProperty('voice', "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0")
+
 
 # what is speak? defining it...
 def speak(audio):
     engine.say(audio)
     engine.runAndWait()
 
+
 #  Web Browser (Windows)
 chrome = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
 edge = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe %s'
 tdate = "today's date"
+
 
 # Function WishMe...
 def wishMe():
@@ -69,7 +75,6 @@ def takeCommand():
     except Exception as e:
         # print(e)
         speak("Say that again please...")
-        print("Say that again please...")
         return "None"
     return query
 
@@ -80,7 +85,7 @@ if __name__ == "__main__":
     wishMe()
 
     while True:
-        query = takeCommand().lower()
+        query = takeCommand()
 
         # Logic for executing tasks based on query
         
@@ -100,6 +105,7 @@ if __name__ == "__main__":
             speak("opening google")
             webbrowser.get(chrome).open("google.com")
             
+            
         # Do google Search
         elif 'search google' in query:
             speak ("searching google")
@@ -118,6 +124,7 @@ if __name__ == "__main__":
         elif 'open youtube' in query:
             speak("opening youtube")
             webbrowser.get(chrome).open("youtube.com")
+            
             
         # Do a YoutTube Search or Find Videos
         elif 'search youtube' in query:
@@ -145,18 +152,30 @@ if __name__ == "__main__":
             webbrowser.get(chrome).open("translate.google.com")
         
         
-         #   All Music Stuff
-        elif 'play music' in query:
+         #  All Music Stuff
+         
+         
+        #  Plays the song downloaded in my PC
+        elif 'music' in query:
             speak("Playing music... Enjoy Music")
             music_dir = 'F:\\Songs\\Playlist'
-            songs = os.listdir(music_dir)
+            gaane = os.listdir(music_dir)
             # print(songs)
-            os.startfile(os.path.join(music_dir, songs[0]))
+            os.startfile(os.path.join(music_dir, gaane[0]))
          
+         
+        #  Open Soptify
         elif 'spotify' in query:
             speak ("Opening Spotify... Enjoy Music")
             spotify_path = "C:/Users/PRANAV BHATTAD/AppData/Roaming/Spotify/Spotify.exe"
             os.startfile(spotify_path)
+
+        # Plays anysong you want
+        elif 'play' in query:
+            song = query.replace('play', '')
+            pywhatkit.playonyt(song)
+            speak ('playing ' + song)
+            print ('playing ' + song)
 
 
         # What is the time?
@@ -187,11 +206,13 @@ if __name__ == "__main__":
             vspath = "E:\\Microsoft VS Code\\Code.exe"
             os.startfile(vspath)
        
+       
         # JetBrains Python
         elif 'open pycharm' in query:
             speak("opening PyCharm")
             pycharm = "C:\\Program Files\\JetBrains\\PyCharm Community Edition\\bin\\pycharm64.exe"
             os.startfile(pycharm)
+
 
         # Adobe Photoshop
         elif 'open photoshop' in query:
@@ -199,17 +220,20 @@ if __name__ == "__main__":
             photoshop = "C:\Program Files\Adobe\Adobe Photoshop 2020\Photoshop.exe"
             os.startfile(photoshop)
 
+
         # Microsoft Word
         elif 'open word' in query:
             speak("Opening Microsoft Word")
             word = "C:\\Program Files\\Microsoft Office\\root\\Office16\\WINWORD.EXE"
             os.startfile(word)
 
+
         # Microsoft Powerpoint
         elif 'open powerpoint' in query:
             speak("Opening Microsoft Powerpoint")
             powerpoint = "C:\\Program Files\\Microsoft Office\\root\Office16\\POWERPNT.EXE"
             os.startfile(powerpoint)
+
 
         # Microsoft Excel
         elif 'open excel' in query:
@@ -237,6 +261,21 @@ if __name__ == "__main__":
             speak("Opening T-Launcher Minecraft")
             tlauncher = "C:\\Users\\PRANAV BHATTAD\\AppData\\Roaming\\.minecraft\\TLauncher.exe"
             os.startfile(tlauncher)
+        
+        
+        
+        # Repeat what I say
+        elif 'repeat' in query:
+            repeat = query.replace('repeat', '')
+            # repeatc = query.replace('repeat', 'repeat: ')
+            # print (repeatc)
+            speak (repeat)
+        
+        
+        # Tells you a joke
+        elif 'joke' in query:
+            speak(pyjokes.get_joke())
+        
         
         # Calculator
         elif 'calcute' in query:
@@ -278,6 +317,7 @@ if __name__ == "__main__":
         # Who made her?
         elif 'who made you' in query:
             speak("I Cherry, was made by Pranav Bhattad")
+
 
         # Some Frequently asked
        
@@ -368,6 +408,8 @@ if __name__ == "__main__":
         # Travelling
         elif 'travel' in query:
             speak("Yes, but you have to carry me. I dont have legs. And dont worry I am portable")
+
+
             
         # Close the A.I 
         # Wrote so many functions because or dont works
