@@ -1,0 +1,1 @@
+Hello, this will create a text file instead of a log file where all your data when you have converted will be showed as *pywhatkit_dbs.txt*
