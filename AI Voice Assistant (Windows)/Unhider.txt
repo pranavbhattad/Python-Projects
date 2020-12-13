@@ -1,0 +1,19 @@
+If you have hidden you r file and you want to unhide it then you need to know this condition:
+
+1. You have to remember the folder's name
+2. You should know where the path was i.e you should know where it was saved.
+
+Once you know the folder name then you have to open cmd or powershell and type this command. 
+We will take your folder's name as <path/folder-name>
+
+Command: attrib -s -h /d "<path/folder-name>"
+
+To avoid parameter errors remeber these conditions:
+
+1. Your folder's name should be in double quotes.
+
+2. For example my Folder's name is : Secret. And I have saved it on Desktop. Then my command will be:
+
+Command: attrib -s -h /d "C:\Users\USER NAME\Desktop\Secret"
+
+Thankyou. This is the way it will work.
