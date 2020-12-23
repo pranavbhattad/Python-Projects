@@ -20,13 +20,16 @@ import wolframalpha
 import pyautogui
 import requests
 import tkinter as tk
+from google_trans_new import google_translator
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
-#  voice or speech engine
+#  voice or speech engine and extras
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
 engine.setProperty('voice', "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\TTS_MS_EN-US_ZIRA_11.0")
 client = wolframalpha.Client('9QLRHU-JUVA87GG39')
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # what is speak? defining it...
 def speak(audio):
@@ -37,11 +40,10 @@ def speak(audio):
 root = tk.Tk()
 root.withdraw()
 
-#  Web Browser (Windows)
-chrome = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe %s'
+#  Extra Variables
 edge = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe %s'
-tdate = "what is today's date"
-ttdate = "today's date"
+tdate = "today's date"
+ttdate = "what is today's date"
 
 
 # Function WishMe...
@@ -68,9 +70,9 @@ def wishMe():
     else:
         speak("Bon Nuit")
 
-    # I am Kiwi... And Bla*3
-    speak("I am kiwi. Please tell how may I help you?")
-    print("I am Kiwi. Please tell how may I help you?\n")
+    # I am Alexa... And Bla*3
+    speak("I am Alexa. Please tell how may I help you?")
+    print("I am Alexa. Please tell how may I help you?\n")
 
 
 # Fuction New (Tells the new headlines)
@@ -97,20 +99,21 @@ def takeCommand():
     query = ""
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Listening...")
+        print("\nListening...")
+        r.adjust_for_ambient_noise(source, duration = 1)
         r.pause_threshold = 0.5
         audio = r.listen(source)
 
     try:
         print("Recognizing...")
-        query = r.recognize_google(audio , language='en-in')
+        query = r.recognize_google(audio , language = 'en-in')
         print(f">>> {query}\n")
 
     except Exception as e:
         print(e)
         if query:
             speak("Say that again please...")
-            
+
     except sr.UnknownValueError:
         speak('Sorry sir! I didn\'t get that! Try typing the command!')
         query = str(input('>>> '))
@@ -132,7 +135,7 @@ if __name__ == "__main__":
         # Logic for executing tasks based on query
         
         # WIKIPEDIA
-        if 'kiwi' in query:
+        if 'alexa' in query:
             if 'wikipedia' in query:
                 speak('Searching Wikipedia...')
                 query = query.replace("wikipedia", "")
@@ -146,15 +149,15 @@ if __name__ == "__main__":
             # Open Google 
             elif 'open google' in query:
                 speak("opening google")
-                webbrowser.get(chrome).open("google.com")
+                os.system("start www.google.com")
                 
                 
             # Do google Search
-            elif 'search google' in query:
+            elif 'search google' in query or 'search' in query:
                 speak ("searching google")
                 indx = query.lower().split().index('google')
                 search = query.split()[indx + 1:]
-                webbrowser.get(chrome).open("https://www.google.com/search?q=" + '+'.join(search))
+                os.system("start https://www.google.com/search?q=" + '+'.join(search))
             
 
             # IP Address
@@ -173,7 +176,7 @@ if __name__ == "__main__":
             # Open Youtube
             elif 'open youtube' in query:
                 speak("opening youtube")
-                webbrowser.get(chrome).open("youtube.com")
+                os.system("start www.youtube.com")
                 
                 
             # Do a YoutTube Search or Find Videos
@@ -181,37 +184,43 @@ if __name__ == "__main__":
                 speak("searching youtube")
                 indx = query.lower().split().index('youtube')
                 search = query.split()[indx+1:]
-                webbrowser.get(chrome).open("http://www.youtube.com/results?search_query=" + '+'.join(search))
+                os.system("start http://www.youtube.com/results?search_query=" + '+'.join(search))
             
             
             # GitHub!
             elif 'open github' in query:
                 speak("opening github")
-                webbrowser.get(chrome).open("github.com")
+                os.system("start www.github.com")
+                
+                
+            # Stackoverflow
+            elif 'stackoverflow' in query:
+                speak("opening stackoverflow")
+                os.system("start https://stackoverflow.com/")
                 
                 
             # Twitter
             elif 'open twitter' in query:
                 speak("opening twitter")
-                webbrowser.get(chrome).open("twitter.com")
+                os.system("start www.twitter.com")
 
 
             # Instagram
             elif 'open instagram' in query or 'instagram' in query:
                 speak("Opening your Instagram Handle")
-                webbrowser.get(chrome).open("instagram.com")
+                os.system("start www.instagram.com")
              
                 
             # Facebook
             elif 'facebook' in query:
                 speak("Opening Facebook")
-                webbrowser.get(chrome).open("facebook.com")
-
-
+                os.system("start www.facebook.com")
+                
+                
             # Translator
             elif 'open translator' in query:
                 speak("opening translator")
-                webbrowser.get(chrome).open("translate.google.com")
+                os.system("start https://translate.google.com/")
             
             
             #  All Music Stuff
@@ -238,7 +247,7 @@ if __name__ == "__main__":
 
             # Plays any song you want
             elif 'play' in query:
-                song = query.replace('kiwi play', '')
+                song = query.replace('alexa play', '')
                 pywhatkit.playonyt(song)
                 speak ('playing ' + song)
                 print ('playing ' + song)
@@ -273,7 +282,7 @@ if __name__ == "__main__":
                 os.startfile(vspath)
         
         
-            # JetBrains Python
+            # JetBrains PyCharm
             elif 'open pycharm' in query:
                 speak("opening PyCharm")
                 pycharm = "C:\\Program Files\\JetBrains\\PyCharm Community Edition\\bin\\pycharm64.exe"
@@ -285,6 +294,7 @@ if __name__ == "__main__":
                 speak("opening whatsapp")
                 wdir = "C:\\Users\\PRANAV BHATTAD\\AppData\\Local\\WhatsApp\\WhatsApp.exe"
                 os.startfile(wdir)
+
 
             # Notepad
             elif 'open notepad' in query:
@@ -463,7 +473,7 @@ if __name__ == "__main__":
                 condition = takeCommand().lower()
                 
                 if 'hide' in condition or 'sure' in condition or 'yes' in condition:
-                    speak("Please select a folder, iif you can't see the window go to your desktop")
+                    speak("Please select a folder, if you can't see the window then got to your desktop")
                     fdir = filedialog.askdirectory()
                     ffdir = '"'+fdir+'"'
                     command = 'attrib +s +h /d '+ ffdir
@@ -499,7 +509,7 @@ if __name__ == "__main__":
 
             # Who made her?
             elif 'who made you' in query:
-                speak("I Kiwi, was made by Pranav Bhattad")
+                speak("I Alexa, was made by Pranav Bhattad")
                         
 
             # What is my location?
@@ -593,7 +603,7 @@ if __name__ == "__main__":
             
             # Can it cry?
             elif 'cry' in query:
-                speak("Yes, I feel sad when I cannot give answers to you. I always try do my best.")
+                speak("Yes, I feel sad when I cannot give answers to you. I always try to do my best.")
             
             #  The other version
             elif 'do you know leo' in query:
@@ -601,7 +611,7 @@ if __name__ == "__main__":
                 
             # What she takes up
             elif 'what do you eat' in query:
-                speak("I eat you battery life, some space in your RAM, Internet,some kilobytes and gives little work to the processor.")
+                speak("I eat your battery life, some space in your RAM, Internet,some kilobytes and gives little work to the processor.")
                 
             # Will she marry you
             elif 'will you marry me' in query:
@@ -623,10 +633,10 @@ if __name__ == "__main__":
         elif 'restart the system' in query:
             os.system("shutdown /r /t 5")
         
-        elif 'sleep the system' in query:
+        elif 'lock the system' in query:
             ctypes.windll.user32.LockWorkStation()
         
-        elif 'force sleep the system' in query:
+        elif 'sleep the system' in query:
             os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
           
           
@@ -704,3 +714,342 @@ if __name__ == "__main__":
                 
             except Exception:
                 speak("Can you say it more clearly?")
+         
+                
+        # The Translator
+        elif 'translate' in query:
+            try:
+                speak("What should I translate\n")
+                text = takeCommand().lower()
+                speak("Which language")
+                lang = takeCommand().lower()
+                
+                if 'afrikaans' in lang or 'africans' in lang:
+                    lang = 'af'
+                    
+                elif 'albanian' in lang:
+                    lang = 'sq'
+                    
+                elif 'arabic' in lang:
+                    lang = 'ar'
+                    
+                elif 'armenian' in lang:
+                    lang = 'hy'
+                    
+                elif 'azerbaijani' in lang:
+                    lang = 'az'
+                    
+                elif 'basque' in lang or 'bask' in lang:
+                    lang = 'eu'
+                    
+                elif 'amharic' in lang:
+                    lang = ''
+                    
+                elif 'belarusian' in lang:
+                    lang = 'be'
+                    
+                elif 'bengali' in lang:
+                    lang = 'bn'
+                    
+                elif 'bosnian' in lang:
+                    lang = 'bs'
+                    
+                elif 'buljgariam' in lang:
+                    lang = 'bg'
+                    
+                elif 'catalan' in lang:
+                    lang = 'ca'
+                    
+                elif 'cebuano' in lang:
+                    lang = 'ceb'
+                    
+                elif 'chichewa' in lang:
+                    lang = 'ny'
+                    
+                elif 'chinese simplified' in lang or 'chinese' in lang:
+                    lang = 'zh-cn'
+                    
+                elif 'chinese traditional' in lang:
+                    lang = 'zh-tw'
+                    
+                elif 'corsican' in lang:
+                    lang = 'co'
+                    
+                elif 'croatian' in lang:
+                    lang = 'hr'
+                    
+                elif 'czech' in lang or 'check' in lang or 'czech republic' in lang:
+                    lang = 'cs'
+                    
+                elif 'danish' in lang:
+                    lang = 'da'
+                    
+                elif 'dutch' in lang:
+                    lang = 'nl'
+                    
+                elif 'english' in lang:
+                    lang = 'en'
+                    
+                elif 'esparanto' in lang:
+                    lang = 'eo'
+                    
+                elif 'estonian' in lang:
+                    lang = 'et'
+                    
+                elif 'filipino' in lang:
+                    lang = 'tl'
+                    
+                elif 'finnish' in lang or 'finnish' in lang:
+                    lang = 'fi'
+                    
+                elif 'french' in lang:
+                    lang = 'fr'  
+                    
+                elif 'frisian' in lang:
+                    lang = 'fy'
+                    
+                elif 'galician' in lang:
+                    lang = 'gl'
+                    
+                elif 'georgian' in lang:
+                    lang = 'ka'
+                    
+                elif 'german' in lang:
+                    lang = 'de'
+                    
+                elif 'greek' in lang:
+                    lang = 'el'
+                    
+                elif 'gujrati' in lang:
+                    lang = 'gu' 
+                    
+                elif 'haitian' in lang:
+                    lang = ''
+                    
+                elif 'hebrew' in lang:
+                    lang = 'iw'
+                    
+                elif 'hindi' in lang:
+                    lang = 'hi'         
+                    
+                elif 'hausa' in lang:
+                    lang = 'ha'
+                    
+                elif 'hawaiian' in lang:
+                    lang = 'haw'
+                    
+                elif 'hmong' in lang:
+                    lang = 'hmn'
+                    
+                elif 'hungarian' in lang:
+                    lang = 'hu'
+                    
+                elif 'icelandic' in lang:
+                    lang = 'is'
+                    
+                elif 'igbo' in lang:
+                    lang = 'ig'
+                    
+                elif 'indonesian' in lang:
+                    lang = 'id'
+                    
+                elif 'irish' in lang:
+                    lang = 'ga'
+                    
+                elif 'italain' in lang:
+                    lang = 'it'
+                    
+                elif 'japanese' in lang:
+                    lang = 'ja'
+                    
+                elif 'kannada' in lang:
+                    lang = 'kn'
+                    
+                elif 'kazakh' in lang:
+                    lang = 'kk'
+                    
+                elif 'khmer' in lang:
+                    lang = 'km'
+                    
+                elif 'korean' in lang:
+                    lang = 'ko'
+                    
+                elif 'kurdish' in lang or 'kurmanji' in lang:
+                    lang = 'ku'
+                    
+                elif 'kyrgyz' in lang:
+                    lang = 'ky'
+                    
+                elif 'lao' in lang:
+                    lang = 'lo'
+                    
+                elif 'latin' in lang:
+                    lang = 'la'
+                    
+                elif 'latvian' in lang:
+                    lang = 'lv'
+                    
+                elif 'lithuanian' in lang:
+                    lang = 'lt'
+                    
+                elif 'luxemborgish' in lang:
+                    lang = 'lb'
+                    
+                elif 'macedonian' in lang:
+                    lang = 'mk'
+                    
+                elif 'malagasy' in lang:
+                    lang = 'mg'
+                    
+                elif 'malay' in lang:
+                    lang = 'ms'
+                    
+                elif 'malayalam' in lang:
+                    lang = 'ml'
+                    
+                elif 'maltese' in lang:
+                    lang = 'mt'
+                    
+                elif 'maori' in lang:
+                    lang = 'mi'
+                
+                elif 'marathi' in lang:
+                    lang = 'mr'
+                    
+                elif 'mongolian' in lang:
+                    lang = 'mn'
+                    
+                elif 'myanmar' in lang or 'burmese' in lang:
+                    lang  = 'my'
+                    
+                elif 'nepali' in lang:
+                    lang = 'ne'
+                    
+                elif 'norwegian' in lang:
+                    lang = 'no'
+                    
+                elif 'odia' in lang:
+                    lang = 'or'
+                    
+                elif 'pashto' in lang:
+                    lang = 'ps'
+                    
+                elif 'persian' in lang:
+                    lang = 'fa'
+                
+                elif 'polish' in lang:
+                    lang = 'pl'
+                    
+                elif 'portuguese' in lang:
+                    lang = 'pt'
+                    
+                elif 'punjabi' in lang:
+                    lang = 'pa'
+                    
+                elif 'romanian' in lang:
+                    lang = 'ro'
+                    
+                elif 'russian' in lang:
+                    lang = 'ru'
+                    
+                elif 'samoan' in lang:
+                    lang = 'sm'
+                    
+                elif 'scots gaelic' in lang:
+                    lang = 'gd'
+                    
+                elif 'serbian' in lang:
+                    lang = 'sr'
+                    
+                elif 'sesetho' in lang:
+                    lang = 'st'
+                    
+                elif 'shona' in lang:
+                    lang = 'sn'
+                    
+                elif 'sinhala' in lang:
+                    lang = 'si'
+                    
+                elif 'slovak' in lang:
+                    lang = 'sk'
+                    
+                elif 'slovenian' in lang:
+                    lang = 'sl'
+                    
+                elif 'somali' in lang:
+                    lang = 'so'
+                    
+                elif 'spanish' in lang:
+                    lang = 'es'
+                    
+                elif 'sundanese' in lang:
+                    lang = 'su'
+                    
+                elif 'swahili' in lang:
+                    lang = 'sw'
+                    
+                elif 'swedish' in lang:
+                    lang = 'sv'
+                    
+                elif 'tajik' in lang: 
+                    lang = 'tg'
+                    
+                elif 'tamil' in lang:
+                    lang = 'ta'
+                
+                elif 'telgu'in lang:
+                    lang = 'te'
+                    
+                elif 'thai' in lang:
+                    lang = 'th'
+                    
+                elif 'turkish' in lang:
+                    lang = 'tr'
+                    
+                elif 'turkmen' in lang:
+                    lang = 'tk'
+                    
+                elif 'ukrainian' in lang:
+                    lang = 'uk'
+                    
+                elif 'urdu' in lang:
+                    lang = 'ur'
+                    
+                elif 'uyghar' in lang:
+                    lang = 'ug'
+                    
+                elif 'uzbek' in lang:
+                    lang = 'uz'
+                    
+                elif 'vietnamese' in lang:
+                    lang = 'vi'
+                    
+                elif 'welsh' in lang:
+                    lang = 'cy'
+                    
+                elif 'xhosa' in lang:
+                    lang = 'xh'
+                    
+                elif 'yiddish' in lang:
+                    lang = 'yi'
+                    
+                elif 'yoruba' in lang:
+                    lang = 'yo'
+                    
+                elif 'zulu' in lang:
+                    lang = 'zu'
+                    
+                else:
+                    speak("No language found, translating back in English")
+                    lang = 'en'
+                    
+                translator = google_translator()  
+                translate_text = translator.translate(text, lang_tgt= lang)
+                new_line = '\n'
+                
+                # print(tt.capitalize())
+                print(translate_text.capitalize())
+                speak(translate_text)
+                
+            except:
+                os.system("start https://translate.google.com/")
